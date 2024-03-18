@@ -12,7 +12,6 @@ function getPrApiCache(): ApiCache<GhPr> {
   const repoCache = getCache();
   repoCache.platform ??= {};
   repoCache.platform.github ??= {};
-  delete repoCache.platform.github.prCache;
   repoCache.platform.github.pullRequestsCache ??= { items: {} };
   const prApiCache = new ApiCache<GhPr>(
     repoCache.platform.github.pullRequestsCache as ApiPageCache<GhPr>,
@@ -64,10 +63,12 @@ export async function getPrCache(
     let pageIdx = 1;
     while (needNextPageFetch && needNextPageSync) {
       const opts: GithubHttpOptions = { paginate: false };
-      if (pageIdx === 1 && isInitial) {
-        // Speed up initial fetch
-        opts.paginate = true;
+      if (pageIdx === 1) {
         opts.repoCache = true;
+        if (isInitial) {
+          // Speed up initial fetch
+          opts.paginate = true;
+        }
       }
 
       const perPage = isInitial ? 100 : 20;
